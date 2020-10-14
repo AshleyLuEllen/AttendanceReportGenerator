@@ -1,5 +1,4 @@
 from datetime import datetime
-from pprint import pprint
 
 
 def parse_session_types():

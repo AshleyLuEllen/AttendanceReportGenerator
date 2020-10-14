@@ -14,17 +14,22 @@ from parse_session_types import session_settings
 sessions_data = []
 
 
+def add_email(session, attendance_total):
+    for email in session['attendance_records']:
+        if email not in attendance_total:
+            attendance_total[email] = 1
+        else:
+            attendance_total[email] += 1
+    return attendance_total
+
+
 def get_stats(countOH=False, countTR=False):
     attendance_total = {}
     for session in sessions_data:
         if (session['abbreviation'] == 'SI'
                 or (session['abbreviation'] == 'OH' and countOH)
                 or (session['abbreviation'] == 'TR' and countTR)):
-            for email in session['attendance_records']:
-                if email not in attendance_total:
-                    attendance_total[email] = 1
-                else:
-                    attendance_total[email] += 1
+            attendance_total = add_email(session, attendance_total)
     return attendance_total
 
 
@@ -36,15 +41,11 @@ def get_stats(start_date, end_date, countOH=False, countTR=False):
             if (session['abbreviation'] == 'SI'
                     or (session['abbreviation'] == 'OH' and countOH)
                     or (session['abbreviation'] == 'TR' and countTR)):
-                for email in session['attendance_records']:
-                    if email not in attendance_total:
-                        attendance_total[email] = 1
-                    else:
-                        attendance_total[email] += 1
+                attendance_total = add_email(session, attendance_total)
     return attendance_total  # dictionary of email (key) to # sessions attended (value)
 
 
-def get_stats_qualified(start_date, end_date, required_count, countOH=False, countTR=False):
+def get_stats(start_date, end_date, required_count, countOH=False, countTR=False):
     qualified = {}
     attendance_total = get_stats(start_date, end_date, countOH, countTR)
     for email in attendance_total:
@@ -79,18 +80,67 @@ def add_session(attendance, session_type, session_date):
     return sessions_data
 
 
-a, st, sd = parse_session('2020-09-16_OH.csv')
-add_session(a, st, sd)
-a, st, sd = parse_session('2020-09-16_TR.csv')
-add_session(a, st, sd)
-a, st, sd = parse_session('2020-09-30_OH.csv', '2020-09-30_OH.txt')
-add_session(a, st, sd)
-a, st, sd = parse_session('2020-10-07_SI.csv', '2020-10-07_SI.txt')
-add_session(a, st, sd)
-a, st, sd = parse_session('2020-10-12_SI.csv', '2020-10-12_SI.txt')
-add_session(a, st, sd)
+def get_stats_prompts():
+    print("Would you like to get stats? (Y/N)")
+    while input() == 'y' or 'Y':
+        print('Would you like to include office hours? (Y/N)')
+        office_hour = input() == 'y' or 'Y'
+        print('Would you like to include test reviews? (Y/N)')
+        test_review = input() == 'y' or 'Y'
 
-# pprint.pprint(sessions_data)
-date = '09-30-2020'
-diction = get_stats(datetime.strptime(date, "%m-%d-%Y"), datetime.strptime(date, "%m-%d-%Y"), True, False)
-print(get_email_from_dictionary(diction))
+        print('Would you like to set a date range for the stats? (Y/N)')
+        response = input()
+        if response == 'y' or 'Y':
+            print('Enter the start date: (MM-DD-YYYY)')
+            date_start = input()
+            print('Enter the end date: (MM-DD-YYYY)')
+            date_end = input()
+            print('Would you like to get only students that qualified?')
+            if response == 'y' or 'Y':
+                print('What is the number of attendances required?')
+                required_attn = int(input())
+                diction = get_stats(datetime.strptime(date_start, "%m-%d-%Y"), datetime.strptime(date_end, "%m-%d-%Y"),
+                                    required_attn, office_hour, test_review)
+                print(get_email_from_dictionary(diction))
+            diction = get_stats(datetime.strptime(date_start, "%m-%d-%Y"), datetime.strptime(date_end, "%m-%d-%Y"),
+                                office_hour, test_review)
+            print(get_email_from_dictionary(diction))
+        elif response == 'n' or 'N':
+            diction = get_stats(office_hour, False)
+            print(get_email_from_dictionary(diction))
+
+
+if __name__ == "__main__":
+    with open('session_attendance.csv') as session_file:
+        with open('override_attendance.csv') as override_file:
+            session_filename = session_file.readline().strip()
+            session_tags = session_filename.split('_')
+            session_tags += session_tags[1].split('.')
+            override_filename = override_file.readline().strip()
+            override_tags = override_filename.split('_')
+            override_tags += override_tags[1].split('.')
+            while len(session_filename) > 1:
+                if session_tags[0] == override_tags[0] and session_tags[2] == override_tags[2]:
+                    a, st, sd = parse_session(session_filename, override_filename)
+                    add_session(a, st, sd)
+
+                    session_filename = session_file.readline().strip()
+                    if len(session_filename) > 0:
+                        session_tags = session_filename.split('_')
+                        session_tags += session_tags[1].split('.')
+
+                    override_filename = override_file.readline().strip()
+                    if len(override_filename) > 0:
+                        override_tags = override_filename.split('_')
+                        override_tags += override_tags[1].split('.')
+                else:
+                    a, st, sd = parse_session(session_filename)
+                    add_session(a, st, sd)
+
+                    session_filename = session_file.readline().strip()
+                    if len(session_filename) > 0:
+                        session_tags = session_filename.split('_')
+                        session_tags += session_tags[1].split('.')
+
+    pprint.pprint(sessions_data)
+    # get_stats_prompts()
