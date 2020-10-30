@@ -15,7 +15,7 @@ from parse_session_types import session_settings
 sessions_data = []
 roster = {}
 session_list = []
-attendance_total = {}
+attendance_total = {}  # dictionary of email (key) to # sessions attended
 attendance_total_SI = {}
 attendance_total_SI_OH = {}
 attendance_total_SI_OH_TR = {}
@@ -35,20 +35,18 @@ def get_stats(countOH=False, countTR=False):
         if (session['abbreviation'] == 'SI'
                 or (session['abbreviation'] == 'OH' and countOH)
                 or (session['abbreviation'] == 'TR' and countTR)):
-            attendance_total = add_email(session, attendance_total)
+            attendance_total = add_emails(session, attendance_total)
     return attendance_total
 
 
 # return a list, and a separate function to parse this return to a csv
 def get_stats(start_date, end_date, countOH=False, countTR=False):
-    attendance_total = {}
     for session in sessions_data:
         if start_date <= datetime.strptime(session['date'], "%m-%d-%Y") <= end_date:
             if (session['abbreviation'] == 'SI'
                     or (session['abbreviation'] == 'OH' and countOH)
                     or (session['abbreviation'] == 'TR' and countTR)):
-                attendance_total = add_email(session, attendance_total)
-    return attendance_total  # dictionary of email (key) to # sessions attended (value)
+                attendance_total = add_emails(session)
 
 
 def get_stats(start_date, end_date, required_count, countOH=False, countTR=False):  #TODO LOOK AT IT
