@@ -1,8 +1,9 @@
 import csv
+import sys
 from datetime import *
 import ast
 import pprint
-from parse_session import parse_session
+from parse_session import get_session_data
 from parse_session_types import session_settings
 
 # TODO A list of sessions every one attended ever (firstName, lastName, email, number of sessions)
@@ -12,9 +13,14 @@ from parse_session_types import session_settings
 # A list of emails that qualified for the test
 
 sessions_data = []
+roster = {}
+session_list = []
+attendance_total = {}
+attendance_total_SI = {}
+attendance_total_SI_OH = {}
+attendance_total_SI_OH_TR = {}
 
-
-def add_email(session, attendance_total):
+def add_emails(session):
     for email in session['attendance_records']:
         if email not in attendance_total:
             attendance_total[email] = 1
@@ -45,10 +51,11 @@ def get_stats(start_date, end_date, countOH=False, countTR=False):
     return attendance_total  # dictionary of email (key) to # sessions attended (value)
 
 
-def get_stats(start_date, end_date, required_count, countOH=False, countTR=False):
+def get_stats(start_date, end_date, required_count, countOH=False, countTR=False):  #TODO LOOK AT IT
     qualified = {}
     attendance_total = get_stats(start_date, end_date, countOH, countTR)
     for email in attendance_total:
+        print(email, attendance_total[email])
         if attendance_total[email] >= required_count:
             if email not in qualified:
                 qualified[email] = attendance_total[email]
@@ -96,51 +103,85 @@ def get_stats_prompts():
             print('Enter the end date: (MM-DD-YYYY)')
             date_end = input()
             print('Would you like to get only students that qualified?')
-            if response == 'y' or 'Y':
+            if input() == 'y' or 'Y':
                 print('What is the number of attendances required?')
                 required_attn = int(input())
-                diction = get_stats(datetime.strptime(date_start, "%m-%d-%Y"), datetime.strptime(date_end, "%m-%d-%Y"),
-                                    required_attn, office_hour, test_review)
+                diction = get_stats(datetime.strptime(date_start, "%m-%d-%Y"), datetime.strptime(date_end, "%m-%d-%Y"), required_attn, office_hour, test_review)
                 print(get_email_from_dictionary(diction))
-            diction = get_stats(datetime.strptime(date_start, "%m-%d-%Y"), datetime.strptime(date_end, "%m-%d-%Y"),
-                                office_hour, test_review)
-            print(get_email_from_dictionary(diction))
+            else:
+                diction = get_stats(datetime.strptime(date_start, "%m-%d-%Y"), datetime.strptime(date_end, "%m-%d-%Y"), office_hour, test_review)
+                print(get_email_from_dictionary(diction))
         elif response == 'n' or 'N':
             diction = get_stats(office_hour, False)
             print(get_email_from_dictionary(diction))
 
 
+def get_list_files(arg_list):
+    session_filenames = []
+    override_filenames = []
+    for filename in arg_list:
+        if filename == "roster.csv":
+            pass
+        elif filename.endswith(".csv"):
+            session_filenames.append(filename)
+        elif filename.endswith(".txt"):
+            override_filenames.append(filename)
+    return session_filenames, override_filenames
+
+
+def create_roster():
+    try:
+        with open("roster.csv") as csvfile:
+            csvfile.readline()
+            student_info = csvfile.readline().strip().split(',')
+            while len(student_info) == 4:
+                if student_info[2].lower() not in roster:
+                    roster[student_info[2].lower()] = {
+                        "first_name": student_info[1],
+                        "last_name": student_info[0],
+                        "section": student_info[3]
+                    }
+                student_info = csvfile.readline().strip().split(',')
+    except IOError:
+        return IOError
+
+
 if __name__ == "__main__":
-    with open('session_attendance.csv') as session_file:
-        with open('override_attendance.csv') as override_file:
-            session_filename = session_file.readline().strip()
-            session_tags = session_filename.split('_')
-            session_tags += session_tags[1].split('.')
-            override_filename = override_file.readline().strip()
-            override_tags = override_filename.split('_')
-            override_tags += override_tags[1].split('.')
-            while len(session_filename) > 1:
-                if session_tags[0] == override_tags[0] and session_tags[2] == override_tags[2]:
-                    a, st, sd = parse_session(session_filename, override_filename)
-                    add_session(a, st, sd)
+    # get a list of the file names for each session and
+    session_filename_list, override_filename_list = get_list_files(list(sys.argv))
+    # session_filename_list = [filename, filename]
+    for session_file in session_filename_list:
+        # for each session get get the supposed file name, and check if it exists in override_filename_list
+        override_file = session_file.split('.')[0] + '.txt'
+        try:
+            attendance, s_type, s_date = get_session_data(session_file, override_file if override_file in override_filename_list else None)
+        except IOError:
+            # if the file does not open, print error
+            print("File Error: " + session_file + (' and/or ' + override_file if override_file in override_filename_list else '') + ' could not be opened. Check if exists.')
+        session_list.append(s_type + ' ' + s_date.strftime("%m/%d/%Y"))
+        # add session to master list
+        add_session(attendance, s_type, s_date)
 
-                    session_filename = session_file.readline().strip()
-                    if len(session_filename) > 0:
-                        session_tags = session_filename.split('_')
-                        session_tags += session_tags[1].split('.')
+    session_list.sort(key=lambda s: datetime.strptime(s[-10:], '%m/%d/%Y'))
+    print(session_list)
+    try:
+        create_roster()
+        # pprint.pprint(roster)
+    except IOError:
+        print("error")
 
-                    override_filename = override_file.readline().strip()
-                    if len(override_filename) > 0:
-                        override_tags = override_filename.split('_')
-                        override_tags += override_tags[1].split('.')
-                else:
-                    a, st, sd = parse_session(session_filename)
-                    add_session(a, st, sd)
+    for session in sessions_data:
+        if session['abbreviation'] == 'SI' or session['abbreviation'] == 'OH':
+            add_emails(session)
+    # pprint.pprint(attendance_total)
 
-                    session_filename = session_file.readline().strip()
-                    if len(session_filename) > 0:
-                        session_tags = session_filename.split('_')
-                        session_tags += session_tags[1].split('.')
-
-    pprint.pprint(sessions_data)
-    # get_stats_prompts()
+    # pprint.pprint(get_email_from_dictionary(attendance_total))
+    #
+    # qualified = {}
+    # for email in attendance_total:
+    #     print(email, attendance_total[email])
+    #     if attendance_total[email] >= 3:
+    #         if email not in qualified:
+    #             qualified[email] = attendance_total[email]
+    # pprint.pprint(qualified)
+    # pprint.pprint(get_email_from_dictionary(qualified))
