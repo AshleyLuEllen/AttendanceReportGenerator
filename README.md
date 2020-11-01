@@ -5,13 +5,14 @@ It uses a zoom report, and finds those that attended and the total time they wer
 
 This information can then be processed to get information needed about attendence. For example, to see if a student has attended enough sessions to qualify for the test review.
 
-To run this program
+# To run this program
 `python3 main.py filename [...]`  
 `filename` can be listed or by piping in the names for files in a folder.
 
 \* Note: files that are `.cvs` are sorted as session files and `.txt` are sorted as override files
 
 
+# File Formats
 ****For safety of the students, all input and output files are not posted. An example of what the input and output files will be below.***
 
 **File formats:**   
