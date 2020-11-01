@@ -35,6 +35,12 @@ email@email.com
 ...
 ```
 
+***input roster:***  
+This file is a `.csv`  
+Last Name,First Name,Email,Section
+last_name,first_name,email@email.com,#
+
+
 ***output session:***  
 All three files will be generated for each session.
 (There are 3 variations of this file)   
