@@ -85,8 +85,8 @@ def add_session(attend_list, session_type, session_date):
 
 
 if __name__ == "__main__":
-    # get a list of the file names for each session and
-    session_filename_list, override_filename_list = get_list_files(list(sys.argv))
+    # get a list of the file names for each session
+    session_filename_list, override_filename_list, roster_filename = get_list_files(list(sys.argv))
     # session_filename_list = [filename, filename]
     for session_file in session_filename_list:
         # for each session get get the supposed file name, and check if it exists in override_filename_list
@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
     # load in the roster date and create it.
     try:
-        create_roster(roster, session_list)
+        create_roster(roster, session_list, roster_filename)
     except IOError:
         print("Error roster.csv could not be read. No data beyond a single session can be created.")
         exit(-1)

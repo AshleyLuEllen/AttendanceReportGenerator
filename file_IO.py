@@ -2,20 +2,21 @@
 def get_list_files(arg_list):
     session_filenames = []
     override_filenames = []
+    roster = None
     for filename in arg_list:
-        if filename == "roster.csv":
-            pass
+        if filename.endswith("roster.csv"):
+            roster = filename
         elif filename.endswith(".csv"):
             session_filenames.append(filename)
         elif filename.endswith(".txt"):
             override_filenames.append(filename)
-    return session_filenames, override_filenames
+    return session_filenames, override_filenames, roster
 
 
 # read in the roster information and create a dictionary that holds that information
-def create_roster(roster, session_list):
+def create_roster(roster, session_list, roster_filename):
     try:
-        with open("roster.csv") as csvfile:
+        with open(roster_filename if roster_filename is not None else "roster.csv") as csvfile:
             csvfile.readline()
             student_info = csvfile.readline().strip().split(',')
             while len(student_info) == 4:
