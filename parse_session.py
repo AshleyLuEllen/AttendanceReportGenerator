@@ -7,50 +7,50 @@ folder_name = "reports/"
 
 def parse_session_file(filename):
     # open the file
-        with open(filename) as csvfile:
-            attendance = {}
-            readCSV = csv.reader(csvfile, delimiter=',')
-            count = 0
-            # for each row process the data in the file
-            for row in readCSV:
-                count += 1
-                if count == 2:  # get the file metadata held in the second row of the file
-                    session_type = row[1]
-                    session_date = datetime.strptime(row[2], '%m/%d/%Y %I:%M:%S %p').date()
-                    host = row[4].lower()
+    with open(filename, 'r') as csvfile:
+        attendance = {}
+        readCSV = csv.reader(csvfile, delimiter=',')
+        count = 0
+        # for each row process the data in the file
+        for row in readCSV:
+            count += 1
+            if count == 2:  # get the file metadata held in the second row of the file
+                session_type = row[1]
+                session_date = datetime.strptime(row[2], '%m/%d/%Y %I:%M:%S %p').date()
+                host = row[4].lower()
 
-                    # the start time of the session from session_settings
-                    session_start_time = session_settings[session_type]['start_time']
-                if count > 4:  # the data begins on line 4
-                    # parse times
-                    # the time from that the user joined the session
-                    start = datetime.strptime(row[2], '%m/%d/%Y %I:%M:%S %p')
-                    # the time from that the user left the session
-                    end = datetime.strptime(row[3], '%m/%d/%Y %I:%M:%S %p')
+                # the start time of the session from session_settings
+                session_start_time = session_settings[session_type]['start_time']
+            if count > 4:  # the data begins on line 4
+                # parse times
+                # the time from that the user joined the session
+                start = datetime.strptime(row[2], '%m/%d/%Y %I:%M:%S %p')
+                # the time from that the user left the session
+                end = datetime.strptime(row[3], '%m/%d/%Y %I:%M:%S %p')
 
-                    # calculate the time in the session, checking that the time they joined is after the start time
-                    time = end - max(start, datetime.combine(session_date, session_start_time.time()))
+                # calculate the time in the session, checking that the time they joined is after the start time
+                time = end - max(start, datetime.combine(session_date, session_start_time.time()))
 
-                    # set email and names
-                    email = row[1].lower()
-                    first_name, last_name = row[0].split(' ', 1)
+                # set email and names
+                email = row[1].lower()
+                first_name, last_name = row[0].split(' ', 1)
 
-                    # if the email has not in attendance, add the email, name, and set time_attended to 0
-                    if email not in attendance:
-                        attendance[email] = {
-                            "first_name": first_name,
-                            "last_name": last_name,
-                            "time_attended": 0
-                        }
-                    # add the time the the person was in the session to their previous times
-                    attendance[email]["time_attended"] += time.total_seconds() / 60
-            # remove host from the attendance list
-            del attendance[host.lower()]
-        return attendance, session_type, session_date
+                # if the email has not in attendance, add the email, name, and set time_attended to 0
+                if email not in attendance:
+                    attendance[email] = {
+                        "first_name": first_name,
+                        "last_name": last_name,
+                        "time_attended": 0
+                    }
+                # add the time the the person was in the session to their previous times
+                attendance[email]["time_attended"] += time.total_seconds() / 60
+        # remove host from the attendance list
+        del attendance[host.lower()]
+    return attendance, session_type, session_date
 
 
 def add_attendance_override(filename, attendance):
-    with open(filename) as override:
+    with open(filename, 'r') as override:
         email = override.readline().strip().lower()
         while email:
             if email not in attendance:
