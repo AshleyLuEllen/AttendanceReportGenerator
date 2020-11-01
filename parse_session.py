@@ -68,6 +68,7 @@ def remove_nonqualifiers(session, session_type, session_date):
     key_delete = []
     try:
         with open(csv_filename, 'w') as csvfile:
+            csvfile.write("email,first_name,last_name,time_attended\n")
             for key in session.keys():
                 if session[key]['time_attended'] < session_settings[session_type]['required_time']:
                     csvfile.write(key + ',' + session[key]['first_name'] + ',' + session[key]['last_name'] + ',' + str(
