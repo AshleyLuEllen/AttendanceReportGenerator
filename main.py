@@ -85,14 +85,17 @@ def add_session(attend_list, session_type, session_date):
 
 
 if __name__ == "__main__":
+    args = parse_arguments()
+    print(args.file_names)
+
     # get a list of the file names for each session
-    session_filename_list, override_filename_list, roster_filename = get_list_files(list(sys.argv))
+    session_filename_list, override_filename_list = collect_file_names(args.file_names)
     # session_filename_list = [filename, filename]
     for session_file in session_filename_list:
         # for each session get get the supposed file name, and check if it exists in override_filename_list
         override_file = session_file.split('.')[0] + '.txt'
         try:
-            attendance, s_type, s_date = get_session_data(session_file, override_file if override_file in override_filename_list else None)
+            attendance, s_type, s_date = get_session_data(args.output_dir, session_file, (override_file if override_file in override_filename_list else None))
             session_list.append(s_type + ' ' + s_date.strftime("%m/%d/%Y"))
             # add session to master list
             add_session(attendance, s_type, s_date)
@@ -105,10 +108,10 @@ if __name__ == "__main__":
 
     # load in the roster date and create it.
     try:
-        create_roster(roster, session_list, roster_filename)
+        create_roster(roster, session_list, args.roster_file_name)
     except IOError:
-        print("Error roster.csv could not be read. No data beyond a single session can be created.")
-        exit(-1)
+        print("Error roster.csv could not be read. No data beyond individual sessions can be created.")
+        exit()
 
     index = 0
     for session in sessions_data:
@@ -116,9 +119,10 @@ if __name__ == "__main__":
             roster[email]["sessions"][index] = '1'
         index += 1
 
-    make_master_list_csv(roster, session_list)
+    make_master_list_csv(roster, session_list, args.output_dir)
 
-    stats_prompts_file_create()
+    if args.interactive_stats:
+        stats_prompts_file_create()
 
 
 

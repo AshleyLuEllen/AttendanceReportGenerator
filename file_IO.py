@@ -1,16 +1,44 @@
+import os
+import argparse
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='TODO: fix')
+
+    parser.add_argument('--stats', '-s',
+                        action='store_true',
+                        dest='interactive_stats',
+                        help='enable interactive prompt for stats')
+    parser.add_argument('--roster', '-r',
+                        action='store',
+                        metavar='FILE',
+                        dest='roster_file_name',
+                        required=True,
+                        help='specifies the roster file for stats')
+    parser.add_argument('--output-dir', '-o',
+                        action='store',
+                        metavar='DIR',
+                        default='./results',
+                        dest='output_dir',
+                        help='specifies the directory for output')
+    parser.add_argument('file_names',
+                        metavar='FILE',
+                        nargs='+',
+                        help='the list of files to process')
+
+    return parser.parse_args()
+
+
 # get the files from the system arguments and sort them as session files and override files
-def get_list_files(arg_list):
-    session_filenames = []
-    override_filenames = []
-    roster = None
-    for filename in arg_list:
-        if filename.endswith("roster.csv"):
-            roster = filename
-        elif filename.endswith(".csv"):
-            session_filenames.append(filename)
-        elif filename.endswith(".txt"):
-            override_filenames.append(filename)
-    return session_filenames, override_filenames, roster
+def collect_file_names(file_names):
+    session_file_names = []
+    override_file_names = []
+    for file_name in file_names:
+        if file_name.endswith(".csv"):
+            session_file_names.append(file_name)
+        elif file_name.endswith(".txt"):
+            override_file_names.append(file_name)
+    return session_file_names, override_file_names
 
 
 # read in the roster information and create a dictionary that holds that information
@@ -32,9 +60,10 @@ def create_roster(roster, session_list, roster_filename):
         return IOError
 
 
-def make_master_list_csv(roster, session_list):
+def make_master_list_csv(roster, session_list, directory):
     try:
-        with open("reports/master.csv", 'w') as master_file:
+        file_name = os.path.join(directory, 'master.csv')
+        with open(file_name, 'w') as master_file:
             master_file.write("First Name,Last Name,Email,Section," + ','.join(session_list) + '\n')
             for email in roster:
                 master_file.write(roster[email]["first_name"] + ',' + roster[email]["last_name"] + ',' + email + ',' + roster[email]["section"] + ',' + ','.join(roster[email]["sessions"]) + '\n')

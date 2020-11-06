@@ -1,8 +1,7 @@
 import csv
+import os
 from datetime import *
 from parse_session_types import session_settings
-
-folder_name = "reports/"
 
 
 def parse_session_file(filename):
@@ -33,9 +32,10 @@ def parse_session_file(filename):
 
                 # set email and names
                 email = row[1].lower()
+                # print(row[0])
                 first_name, last_name = row[0].split(' ', 1)
 
-                # if the email has not in attendance, add the email, name, and set time_attended to 0
+                # if the email is not in attendance, add the email, name, and set time_attended to 0
                 if email not in attendance:
                     attendance[email] = {
                         "first_name": first_name,
@@ -63,8 +63,8 @@ def add_attendance_override(filename, attendance):
         return attendance
 
 
-def remove_nonqualifiers(session, session_type, session_date):
-    csv_filename = folder_name + session_date.strftime("%Y-%m-%d") + '_' + session_settings[session_type]['abbreviation'] + "-nonqualifiers.csv"
+def remove_nonqualifiers(output_dir, session, session_type, session_date):
+    csv_filename = os.path.join(output_dir, session_date.strftime("%Y-%m-%d") + '_' + session_settings[session_type]['abbreviation'] + "-nonqualifiers.csv")
     key_delete = []
     try:
         with open(csv_filename, 'w') as csvfile:
@@ -81,9 +81,9 @@ def remove_nonqualifiers(session, session_type, session_date):
         print("I/O error: Unable to open file " + csv_filename)
 
 
-def write_session_dictionary_csv(attendance, session_type, session_date, suffix=''):
+def write_session_csv(output_dir, attendance, session_type, session_date, suffix=''):
     # get the filename in the format of YYYY-MM-DD_ABV[-suffix].csv
-    csv_filename = folder_name + session_date.strftime("%Y-%m-%d") + '_' + session_settings[session_type]['abbreviation'] + suffix + '.csv'
+    csv_filename = os.path.join(output_dir, session_date.strftime("%Y-%m-%d") + '_' + session_settings[session_type]['abbreviation'] + suffix + '.csv')
     # get the titles of the columns
     csv_columns = ['email']
     for email in attendance.keys():
@@ -106,15 +106,16 @@ def write_session_dictionary_csv(attendance, session_type, session_date, suffix=
         print("I/O error: Unable to open file " + csv_filename)
 
 
-def get_session_data(session_filename, override_filename=None):
-    session_atten, stype, sdate = parse_session_file(session_filename)
+def get_session_data(output_dir, session_file_name, override_file_name=None):
+    print(f"file: {session_file_name}, dir: {output_dir}")
+    session_atten, stype, sdate = parse_session_file(session_file_name)
     # write the file all people that attended the session
-    write_session_dictionary_csv(session_atten, stype, sdate, '-all')
+    write_session_csv(output_dir, session_atten, stype, sdate, '-all')
     # remove from the list those that did not qualify for the time minimum
-    remove_nonqualifiers(session_atten, stype, sdate)
+    remove_nonqualifiers(output_dir, session_atten, stype, sdate)
     # add in the people that are on the override list
-    if override_filename is not None:
-        session_atten = add_attendance_override(override_filename, session_atten)
+    if override_file_name is not None:
+        session_atten = add_attendance_override(override_file_name, session_atten)
     # write the file of those that qualified including overrides
-    write_session_dictionary_csv(session_atten, stype, sdate, '-qualifiers')
+    write_session_csv(output_dir, session_atten, stype, sdate, '-qualifiers')
     return session_atten, stype, sdate

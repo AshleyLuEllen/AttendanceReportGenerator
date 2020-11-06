@@ -1,6 +1,5 @@
 .idea/
 __pycache__/
-venv/
 
 # all of the test data
 20*
