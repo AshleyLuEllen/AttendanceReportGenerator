@@ -33,7 +33,10 @@ def parse_session_file(filename):
                 # set email and names
                 email = row[1].lower()
                 # print(row[0])
-                first_name, last_name = row[0].split(' ', 1)
+                try:
+                    first_name, last_name = row[0].split(' ', 1)  # TODO do not get name from here
+                except ValueError:
+                    first_name, last_name = '', ''
 
                 # if the email is not in attendance, add the email, name, and set time_attended to 0
                 if email not in attendance:
