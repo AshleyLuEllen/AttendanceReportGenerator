@@ -33,45 +33,45 @@ def get_stats(countOH=False, countTR=False, start_date=None, end_date=None):
     return attendance_total_stats
 
 
-def get_stats_required(start_date, end_date, required_count, countOH=False, countTR=False):  #TODO LOOK AT IT
-    attendance_total = get_stats(countOH, countTR, start_date, end_date)
-    qualified = {}
-    for email in attendance_total:
-        print(email, attendance_total[email])
-        if attendance_total[email] >= required_count:
-            if email not in qualified:
-                qualified[email] = attendance_total[email]
-    return qualified  # dictionary of email (key) to # sessions attended (value)
+# def get_stats_required(start_date, end_date, required_count, countOH=False, countTR=False):  #TODO LOOK AT IT
+#     attendance_total = get_stats(countOH, countTR, start_date, end_date)
+#     qualified = {}
+#     for email in attendance_total:
+#         print(email, attendance_total[email])
+#         if attendance_total[email] >= required_count:
+#             if email not in qualified:
+#                 qualified[email] = attendance_total[email]
+#     return qualified  # dictionary of email (key) to # sessions attended (value)
 
 
-def stats_prompts_file_create():
-    print("Would you like to get overall stats? (Y/N)")
-    while input() in 'yY':
-        print('Would you like to include office hours? (Y/N)')
-        office_hour = input() in 'yY'
-        print('Would you like to include test reviews? (Y/N)')
-        test_review = input() in 'yY'
-
-        print('Would you like to set a date range for the stats? (Y/N)')
-        response = input()
-        if response in 'yY':
-            print('Enter the start date: (MM/DD/YYYY)')
-            date_start = datetime.strptime(input(), "%m/%d/%Y")
-            print('Enter the end date: (MM/DD/YYYY)')
-            date_end = datetime.strptime(input(), "%m/%d/%Y")
-            print('Would you like to get only students that qualified? (Y/N)')
-            if input() in 'yY':
-                print('What is the number of attendances required?')
-                required_attn = int(input())
-                diction = get_stats_required(date_start, date_end, required_attn, office_hour, test_review)
-                write_file_stats('_q' + ('_OH' if office_hour else '') + ('_TR' if test_review else '') + '_' + date_start.strftime("%Y-%m-%d") + '-' + date_end.strftime("%Y-%m-%d"), diction, roster)
-            else:
-                diction = get_stats(office_hour, test_review, date_start, date_end)
-                write_file_stats(('_OH' if office_hour else '') + ('_TR' if test_review else '') + '_' + date_start.strftime("%Y-%m-%d") + '-' + date_end.strftime("%Y-%m-%d"), diction, roster)
-        else:
-            diction = get_stats(office_hour, test_review)
-            write_file_stats(('_OH' if office_hour else '') + ('_TR' if test_review else ''), diction, roster)
-        print("Would you like to get more overall stats? (Y/N)")
+# def stats_prompts_file_create():
+#     print("Would you like to get overall stats? (Y/N)")
+#     while input() in 'yY':
+#         print('Would you like to include office hours? (Y/N)')
+#         office_hour = input() in 'yY'
+#         print('Would you like to include test reviews? (Y/N)')
+#         test_review = input() in 'yY'
+#
+#         print('Would you like to set a date range for the stats? (Y/N)')
+#         response = input()
+#         if response in 'yY':
+#             print('Enter the start date: (MM/DD/YYYY)')
+#             date_start = datetime.strptime(input(), "%m/%d/%Y")
+#             print('Enter the end date: (MM/DD/YYYY)')
+#             date_end = datetime.strptime(input(), "%m/%d/%Y")
+#             print('Would you like to get only students that qualified? (Y/N)')
+#             if input() in 'yY':
+#                 print('What is the number of attendances required?')
+#                 required_attn = int(input())
+#                 diction = get_stats_required(date_start, date_end, required_attn, office_hour, test_review)
+#                 write_file_stats('_q' + ('_OH' if office_hour else '') + ('_TR' if test_review else '') + '_' + date_start.strftime("%Y-%m-%d") + '-' + date_end.strftime("%Y-%m-%d"), diction, roster)
+#             else:
+#                 diction = get_stats(office_hour, test_review, date_start, date_end)
+#                 write_file_stats(('_OH' if office_hour else '') + ('_TR' if test_review else '') + '_' + date_start.strftime("%Y-%m-%d") + '-' + date_end.strftime("%Y-%m-%d"), diction, roster)
+#         else:
+#             diction = get_stats(office_hour, test_review)
+#             write_file_stats(('_OH' if office_hour else '') + ('_TR' if test_review else ''), diction, roster)
+#         print("Would you like to get more overall stats? (Y/N)")
 
 
 # what this does
@@ -122,7 +122,8 @@ if __name__ == "__main__":
     make_master_list_csv(roster, session_list, args.output_dir)
 
     if args.interactive_stats:
-        stats_prompts_file_create()
+        print("Not yet finished.")
+        # stats_prompts_file_create()
 
 
 
