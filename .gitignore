@@ -4,4 +4,4 @@ __pycache__/
 # all of the test data
 20*
 roster.csv
-reports/
+results/

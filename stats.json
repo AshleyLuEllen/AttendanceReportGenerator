@@ -1,0 +1,12 @@
+{
+  "stat1":{
+    "file_name": "",
+    "startDate": "",
+    "endDate": "",
+    "includeSI": true,
+    "includeOH": true,
+    "includeTR": false,
+    "qualifiedOnly": true,
+    "requiredCount": 0
+  }
+}

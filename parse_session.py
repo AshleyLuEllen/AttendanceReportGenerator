@@ -32,17 +32,10 @@ def parse_session_file(filename):
 
                 # set email and names
                 email = row[1].lower()
-                # print(row[0])
-                try:
-                    first_name, last_name = row[0].split(' ', 1)  # TODO do not get name from here
-                except ValueError:
-                    first_name, last_name = '', ''
 
                 # if the email is not in attendance, add the email, name, and set time_attended to 0
                 if email not in attendance:
                     attendance[email] = {
-                        "first_name": first_name,
-                        "last_name": last_name,
                         "time_attended": 0
                     }
                 # add the time the the person was in the session to their previous times
@@ -110,7 +103,6 @@ def write_session_csv(output_dir, attendance, session_type, session_date, suffix
 
 
 def get_session_data(output_dir, session_file_name, override_file_name=None):
-    print(f"file: {session_file_name}, dir: {output_dir}")
     session_atten, stype, sdate = parse_session_file(session_file_name)
     # write the file all people that attended the session
     write_session_csv(output_dir, session_atten, stype, sdate, '-all')

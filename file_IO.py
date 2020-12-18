@@ -1,20 +1,27 @@
 import os
 import argparse
+import json
+from parse_session_types import session_settings
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='TODO: fix')
 
-    parser.add_argument('--stats', '-s',
-                        action='store_true',
-                        dest='interactive_stats',
-                        help='enable interactive prompt for stats')
     parser.add_argument('--roster', '-r',
                         action='store',
                         metavar='FILE',
                         dest='roster_file_name',
                         required=True,
                         help='specifies the roster file for stats')
+    parser.add_argument('--it', '-i',
+                        action='store_true',
+                        dest='it_stats',
+                        # nargs='2',
+                        help='adds an output files to give to IT for total attendance')
+    parser.add_argument('--stats', '-s',
+                        action='store_true',
+                        dest='interactive_stats',
+                        help='enable interactive prompt for stats')
     parser.add_argument('--output-dir', '-o',
                         action='store',
                         metavar='DIR',
@@ -60,7 +67,7 @@ def create_roster(roster, session_list, roster_filename):
         return IOError
 
 
-def make_master_list_csv(roster, session_list, directory):
+def write_master_list_csv(roster, session_list, directory):
     try:
         file_name = os.path.join(directory, 'master.csv')
         with open(file_name, 'w') as master_file:
@@ -71,12 +78,66 @@ def make_master_list_csv(roster, session_list, directory):
         print("Master File could not be created.")
 
 
-def write_file_stats(tag, stats, roster):
+def write_stat_files(stats, roster, session_list, directory):
+    for stat in stats:
+        try:
+            file_name = os.path.join(directory, stat['name'] + ".csv")
+            with open(file_name, 'w') as stat_file:
+                validSessions = []
+                for session in session_list:
+                    if len(stat['startDate']) < 0 and stat['startDate'] <= session['date'] <= stat['endDate']:
+                        if (session['abbreviation'] == 'SI' and stat['includeSI']
+                                or (session['abbreviation'] == 'OH' and stat['includeOH'])
+                                or (session['abbreviation'] == 'TR' and stat['includeTR'])):
+                            validSessions.append(session)
+                attendance = {}
+                for session in validSessions:
+                    for email in session['attendance_records']:
+                        if stat['qualifiedOnly']:
+                            required_time = session_settings[session['abbreviation']]
+                            if email['time_attended'] >= required_time:
+                                print(email)
+                                if email not in attendance:
+                                    attendance[email] = {
+                                        "session_count": 0
+                                    }
+                                # add the time the the person was in the session to their previous times
+                                attendance[email]["session_count"] += 1
+                        else:
+                            if email not in attendance:
+                                attendance[email] = {
+                                    "session_count": 0
+                                }
+                            # add the time the the person was in the session to their previous times
+                            attendance[email]["session_count"] += 1
+                for email in attendance:
+                    if email["session_count"] >= stat['requiredCount']:
+                        stat_file.write(
+                            roster[email]["first_name"] + ',' +
+                            roster[email]["last_name"] + ',' +
+                            email + ',' +
+                            str(
+                                stats[email]) + '\n')
+
+
+
+
+
+
+                print('File: stats' + stats['name'] + '.csv created.')
+                stat_file.write('First Name,Last Name,Email,Total Attendance\n')
+                for email in stats:
+                    stat_file.write(roster[email]["first_name"] + ',' + roster[email]["last_name"] + ',' + email + ',' + str(stats[email]) + '\n')
+        except IOError:
+            print("Stat file '" + stat['name'] + ".csv' could not be created.")
+
+
+def write_IT_file(leaderID, term, attendance_data, directory):
     try:
-        with open("reports/" + 'stats' + tag + ".csv", 'w') as stat_file:
-            print('File: stats' + tag + '.csv created.')
-            stat_file.write('First Name,Last Name,Email,Section,Total Attendance\n')
-            for email in stats:
-                stat_file.write(roster[email]["first_name"] + ',' + roster[email]["last_name"] + ',' + email + ',' + roster[email]["section"] + ',' + str(stats[email]) + '\n')
+        file_name = os.path.join(directory, 'IT_attendance.csv')
+        with open(file_name, 'w') as it_file:
+            for session in attendance_data:
+                for person in session['attendance_records']:
+                    it_file.write(str(leaderID) + ',' + str(term) + ',' + str(person) + ',' + str(session['date']) + '\n')
     except IOError:
-        print("Stat file 'stats" + tag + ".csv' could not be created.")
+        print("Error creating the IT file 'IT_attendance.csv'")
