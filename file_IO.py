@@ -131,7 +131,7 @@ def write_IT_file(leaderID, term, attendance_data, directory, includeOH):
     try:
         file_name = os.path.join(directory, 'IT_attendance.csv')
         with open(file_name, 'w') as it_file:
-            it_file.write('Leader ID, Term ID, Baylor Email, Session Date')
+            it_file.write('Leader ID, Term ID, Baylor Email, Session Date\n')
             for session in attendance_data:
                 if session['session_type'] != 'OH' or includeOH:
                     for person in session['attendance_records']:
