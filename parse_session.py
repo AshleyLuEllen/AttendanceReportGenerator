@@ -51,15 +51,13 @@ def add_attendance_override(filename, attendance):
         while email:
             if email not in attendance:
                 attendance[email] = {
-                    "first_name": '',
-                    "last_name": '',
                     "time_attended": 'override'
                 }
             email = override.readline().strip().lower()
         return attendance
 
 
-def remove_nonqualifiers(output_dir, session, session_type, session_date):
+def remove_nonqualifiers(output_dir, session, session_type, session_date, includeNonQ):
     csv_filename = os.path.join(output_dir, session_date.strftime("%Y-%m-%d") + '_' + session_settings[session_type]['abbreviation'] + "-nonqualifiers.csv")
     key_delete = []
     try:
@@ -67,17 +65,17 @@ def remove_nonqualifiers(output_dir, session, session_type, session_date):
             csvfile.write("email,first_name,last_name,time_attended\n")
             for key in session.keys():
                 if session[key]['time_attended'] < session_settings[session_type]['required_time']:
-                    csvfile.write(key + ',' + session[key]['first_name'] + ',' + session[key]['last_name'] + ',' + str(
-                        session[key]['time_attended']) + '\n')
+                    csvfile.write(key + ',' + str(session[key]['time_attended']) + '\n')
                     key_delete.append(key)
-            for key in key_delete:
-                del session[key]
+            if not includeNonQ:
+                for key in key_delete:
+                    del session[key]
             csvfile.close()
     except IOError:
         print("I/O error: Unable to open file " + csv_filename)
 
 
-def write_session_csv(output_dir, attendance, session_type, session_date, suffix=''):
+def write_session_csv(output_dir, attendance, session_type, session_date, suffix='', qualifiersOnly=False):
     # get the filename in the format of YYYY-MM-DD_ABV[-suffix].csv
     csv_filename = os.path.join(output_dir, session_date.strftime("%Y-%m-%d") + '_' + session_settings[session_type]['abbreviation'] + suffix + '.csv')
     # get the titles of the columns
@@ -93,24 +91,26 @@ def write_session_csv(output_dir, attendance, session_type, session_date, suffix
             csvfile.write(','.join(csv_columns) + '\n')
             # for each email in attendance
             for email in sorted(attendance.keys()):
-                csvfile.write(email)
-                # get the value of each part and write to the file
-                for value in attendance[email]:
-                    csvfile.write(',' + str(attendance[email][value]))
-                csvfile.write('\n')
+                if (((attendance[email]['time_attended'] == 'override' or attendance[email]['time_attended'] >= session_settings[session_type]['required_time']) and qualifiersOnly)
+                        or not qualifiersOnly):
+                    csvfile.write(email)
+                    # get the value of each part and write to the file
+                    for value in attendance[email]:
+                        csvfile.write(',' + str(attendance[email][value]))
+                    csvfile.write('\n')
     except IOError:
         print("I/O error: Unable to open file " + csv_filename)
 
 
-def get_session_data(output_dir, session_file_name, override_file_name=None):
+def get_session_data(output_dir, includeNonQ, session_file_name, override_file_name=None):
     session_atten, stype, sdate = parse_session_file(session_file_name)
     # write the file all people that attended the session
     write_session_csv(output_dir, session_atten, stype, sdate, '-all')
     # remove from the list those that did not qualify for the time minimum
-    remove_nonqualifiers(output_dir, session_atten, stype, sdate)
+    remove_nonqualifiers(output_dir, session_atten, stype, sdate, includeNonQ)
     # add in the people that are on the override list
     if override_file_name is not None:
         session_atten = add_attendance_override(override_file_name, session_atten)
     # write the file of those that qualified including overrides
-    write_session_csv(output_dir, session_atten, stype, sdate, '-qualifiers')
+    write_session_csv(output_dir, session_atten, stype, sdate, '-qualifiers', True)
     return session_atten, stype, sdate

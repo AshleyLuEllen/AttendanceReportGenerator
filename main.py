@@ -1,8 +1,5 @@
-
-import string
 import sys
-from datetime import *
-import pprint
+import json
 from file_IO import *
 from parse_session import get_session_data
 from parse_session_types import session_settings
@@ -14,6 +11,9 @@ attendance_total = {}  # dictionary of email (key) to # sessions attended
 
 term = 202030
 hostID = 892472193
+
+includeOH = True
+includeNonQ = True
 
 
 def add_emails(session, dictionary):
@@ -43,7 +43,7 @@ if __name__ == "__main__":
         # for each session get get the supposed file name, and check if it exists in override_filename_list
         override_file = session_file.split('.')[0] + '.txt'
         try:
-            attendance, s_type, s_date = get_session_data(args.output_dir, session_file, (override_file if override_file in override_filename_list else None))
+            attendance, s_type, s_date = get_session_data(args.output_dir, includeNonQ, session_file, (override_file if override_file in override_filename_list else None))
             session_list.append(s_type + ' ' + s_date.strftime("%m/%d/%Y"))
             # add session to master list
             add_session(attendance, s_type, s_date)
@@ -69,25 +69,16 @@ if __name__ == "__main__":
 
     write_master_list_csv(roster, session_list, args.output_dir)
 
-    if args.interactive_stats:
-        print("Not yet finished.")
-        # stats = parse stats.json file
-        stats = {
-          "stat1":{
-            "file_name": "stat1",
-            "startDate": "",
-            "endDate": "",
-            "includeSI": True,
-            "includeOH": True,
-            "includeTR": False,
-            "qualifiedOnly": True,
-            "requiredCount": 0
-          }
-        }
-        write_stat_files(stats, roster, sessions_data, args.output_dir)
+    if args.stats:
+        try:
+            with open(args.stats) as json_file:
+                stats = json.load(json_file)
+                write_stat_files(stats, roster, sessions_data, args.output_dir)
+        except FileNotFoundError:
+            print('I/O error: Unable to open file', args.stats)
 
-    if args.it_stats:
-        write_IT_file(hostID, term, sessions_data, args.output_dir)
+    if len(args.it_stats) == 2:
+        write_IT_file(args.it_stats[0], args.it_stats[1], sessions_data, args.output_dir, includeOH)
 
 
 

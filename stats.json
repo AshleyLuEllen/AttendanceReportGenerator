@@ -1,12 +1,22 @@
 {
-  "stat1":{
-    "file_name": "",
-    "startDate": "",
-    "endDate": "",
-    "includeSI": true,
+  "stat1": {
+    "file_name": "stat1",
+    "startDate": "10/01/2020",
+    "endDate": "10/08/2020",
+    "includeSI": false,
     "includeOH": true,
     "includeTR": false,
     "qualifiedOnly": true,
+    "requiredCount": 0
+  },
+  "stat2": {
+    "file_name": "stat2",
+    "startDate": "09/02/2020",
+    "endDate": "09/30/2020",
+    "includeSI": true,
+    "includeOH": true,
+    "includeTR": false,
+    "qualifiedOnly": false,
     "requiredCount": 0
   }
 }
