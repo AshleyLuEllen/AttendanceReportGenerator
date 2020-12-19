@@ -5,3 +5,5 @@ __pycache__/
 20*
 roster.csv
 results/
+
+venv
