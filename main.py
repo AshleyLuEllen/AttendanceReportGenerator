@@ -7,10 +7,6 @@ from parse_session_types import session_settings
 sessions_data = []
 roster = {}
 session_list = []
-attendance_total = {}  # dictionary of email (key) to # sessions attended
-
-term = 202030
-hostID = 892472193
 
 includeOH = True
 includeNonQ = True
