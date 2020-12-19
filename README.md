@@ -37,7 +37,7 @@ optional arguments:
 This file is a `.csv`  
 ```
 Meeting ID,Topic,Start Time,End Time,User Email,Duration (Minutes),Participants,
-###########,name,mm/DD/YYYY HH:MM:SS AM/PM,mm/DD/YYYY HH:MM:SS AM/PM,hostemail@email.com,##,##,
+###########,session_type,mm/DD/YYYY HH:MM:SS AM/PM,mm/DD/YYYY HH:MM:SS AM/PM,hostemail@email.com,##,##,
 
 Name (Original Name),User Email,Join Time,Leave Time,Duration (Minutes),Recording Consent
 Full Name,email@email.com,mm/DD/YYYY HH:MM:SS AM/PM,mm/DD/YYYY HH:MM:SS AM/PM,##[,Y]
